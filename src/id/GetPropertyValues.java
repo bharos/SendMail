@@ -37,7 +37,6 @@ public class GetPropertyValues {
 		} finally {
 			inputStream.close();
 		}
-		System.out.println("Res : "+result);
 		return result;
 	}
 }

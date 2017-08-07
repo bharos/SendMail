@@ -20,6 +20,7 @@ public class GenerateId {
 	public static int prefixLength;
 	public static int empOrHR=0;
 	public static String jobId="";
+	public static String emailId="";
 	GetPropertyValues properties;
 	
 	 //  Database credentials
@@ -46,7 +47,7 @@ public class GenerateId {
 		if( DB_URL == null)throw new IOException("Invalid property in config.properties");
 
 	}
-	public int insertInDB(String firstName, String lastName, String company, int empOrHR) throws SQLException {
+	public int insertInDB(String firstName, String lastName, String company, int empOrHR, String emailId) throws SQLException {
 		 Connection conn = null;
 		   Statement stmt = null;
 		   int count = 0;
@@ -70,7 +71,7 @@ public class GenerateId {
 		      System.out.println("Creating statement...");
 		      stmt = conn.createStatement();
 		      String sql;
-		      sql = "INSERT INTO contacts(firstName,lastName,company,HR) values('"+firstName+"','"+lastName+"','"+company+"',"+empOrHR+")";
+		      sql = "INSERT INTO contacts(firstName,lastName,company,HR) values('"+firstName+"','"+lastName+"','"+company+"',"+empOrHR+","+emailId+")";
 		    System.out.println(sql);
 		      try{
 		    	  count = stmt.executeUpdate(sql);
@@ -249,7 +250,7 @@ public class GenerateId {
 		String company = in.nextLine();
 		
 		
-		System.out.println("Enter 1 for HR, 2 for Employee");
+		System.out.println("Enter 1 for HR, 2 for Employee, 3 to enter email ID");
 		empOrHR = in.nextInt();
 		
 		if(empOrHR == 2)
@@ -259,8 +260,45 @@ public class GenerateId {
 			jobId = in.nextLine();
 			 
 		}
-		
-		
+		if(empOrHR == 3)
+		{
+			System.out.println("Enter email id");
+			in.nextLine();
+			emailId = in.nextLine();
+			
+			try{
+			GenerateId genId = new GenerateId();
+			int dbResult = 0;
+			int mailAgain = 0;
+			
+			genId.generateNames(firstName, lastName, company);
+			try {
+				dbResult = genId.insertInDB(firstName, lastName, company, empOrHR,emailId);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(dbResult != 1)
+			{
+				System.out.println("Already contacted. Want to mail again ? Enter 1 for Yes. ");
+				mailAgain = in.nextInt();
+				if(mailAgain != 1)
+				{
+					in.close();
+				return;
+				}
+			}
+			SendFileEmail em = new SendFileEmail();
+			em.sendMail(emailId,firstName, company,1,jobId);
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+			
+		}
+		else
+		{
 		System.out.println("Job id = "+jobId);
 		try{
 			GenerateId genId = new GenerateId();
@@ -269,22 +307,22 @@ public class GenerateId {
 		int mailAgain = 0;
 		
 		genId.generateNames(firstName, lastName, company);
-		try {
-			dbResult = genId.insertInDB(firstName, lastName, company, empOrHR);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if(dbResult != 1)
-		{
-			System.out.println("Already contacted. Want to mail again ? Enter 1 for Yes. ");
-			mailAgain = in.nextInt();
-			if(mailAgain != 1)
-			{
-				in.close();
-			return;
-			}
-		}
+//		try {
+//			dbResult = genId.insertInDB(firstName, lastName, company, empOrHR,emailId);
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		if(dbResult != 1)
+//		{
+//			System.out.println("Already contacted. Want to mail again ? Enter 1 for Yes. ");
+//			mailAgain = in.nextInt();
+//			if(mailAgain != 1)
+//			{
+//				in.close();
+//			return;
+//			}
+//		}
 		//Send email to generated ids
 			for(int i= prefixLength;i<l.size();i++)
 			{
@@ -302,7 +340,7 @@ public class GenerateId {
 		finally{
 			in.close();
 		}
-
 	}
+}
 
 }
