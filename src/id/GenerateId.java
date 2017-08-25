@@ -29,6 +29,7 @@ public class GenerateId {
 	private static int recipientCount = 0;
 	private static int inputType = 0;
 	private static String inputFile;
+	private static String outputFile;
 	// Database credentials
 	private String USER;
 	private String PASS;
@@ -68,11 +69,13 @@ public class GenerateId {
 		if (inputType == 2) {
 			try {
 				inputFile = properties.getPropValues("recruiterInfoFilename").trim();
+				outputFile = properties.getPropValues("alreadyMailedRecruiterInfoFilename").trim();
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			try {
-				fileOperations = new FileOperations(inputFile, "");
+				fileOperations = new FileOperations(inputFile, outputFile);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -261,26 +264,31 @@ public class GenerateId {
 	}
 
 	private void incrementEmailCounter() {
-		
+
 		// increase count by number of different ids generated for current
 		// recipient
 		emailCounter += l.size();
 	}
 
 	private int getSleepInterval() {
+
+		if(inputType == 1)return 0;
+		
 		// After each recipient, sleep for 10 seconds, after 3 recipients sleep
-		// for 30 seconds
+		// for 20 seconds
 
-		if (recipientCount % 3 == 0)
-			return 10000;
+		if (recipientCount>0 && recipientCount % 3 == 0)
+			return 20000;
 
-		return 30000;
+		return 10000;
 	}
+
 
 	private void generateIdsAndSendMail(String firstName, String lastName, String company) throws IOException {
 
 		int dbResult = 0;
 		int mailAgain = 0;
+
 		generateNames(firstName, lastName, company);
 		// try {
 		// dbResult = genId.insertInDB(firstName, lastName, company,
@@ -303,13 +311,14 @@ public class GenerateId {
 		// Send email to generated ids
 		List<MailerThread> threadList = new ArrayList<MailerThread>();
 		for (int i = prefixLength; i < l.size(); i++) {
-			 System.out.println(l.get(i));
+			System.out.println(l.get(i));
 
 			// SendFileEmail em = new SendFileEmail();
 			// em.sendMail(l.get(i),firstName, company,empOrHR,jobId);
+
 			MailerThread thread = new MailerThread(l.get(i), firstName, company, empOrHR, jobId);
 			threadList.add(thread);
-			thread.start();
+			 thread.start();
 			emailCounter++;
 
 		}
@@ -336,97 +345,93 @@ public class GenerateId {
 		}
 
 	}
-public void sendMails() {
-	String firstName = "", lastName = "", company = "";
-	Scanner in = new Scanner(System.in);
 
-	
-	if (inputType == 1) { // config to read input from input stream
+	public void sendMails() {
+		String firstName = "", lastName = "", company = "";
+		Scanner in = new Scanner(System.in);
 
-		System.out.println("Email ID Generator\n\n");
+		if (inputType == 1) { // config to read input from input stream
 
-		System.out.println("First Name");
-		firstName = in.nextLine();
+			System.out.println("Email ID Generator\n\n");
 
-		System.out.println("Last Name");
-		lastName = in.nextLine();
+			System.out.println("First Name");
+			firstName = in.nextLine();
 
-		System.out.println("Company Name");
-		company = in.nextLine();
+			System.out.println("Last Name");
+			lastName = in.nextLine();
 
-		System.out.println("Enter 1 for HR, 2 for Employee, 3 to enter email ID");
-		empOrHR = in.nextInt();
+			System.out.println("Company Name");
+			company = in.nextLine();
 
-		if (empOrHR == 2) {
-			System.out.println("Enter job id");
-			in.nextLine();
-			jobId = in.nextLine();
+			System.out.println("Enter 1 for HR, 2 for Employee, 3 to enter email ID");
+			empOrHR = in.nextInt();
 
-		}
-		if (empOrHR == 3) {
-			System.out.println("Enter email id");
-			in.nextLine();
-			emailId = in.nextLine();
-		}
-		if (empOrHR == 3) {
-			SendFileEmail em;
-			try {
-				em = new SendFileEmail();
-				em.sendMail(emailId, firstName, company, empOrHR, jobId);
-				// Sent mail to input emailId, now exit
-				System.exit(0);
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (empOrHR == 2) {
+				System.out.println("Enter job id");
+				in.nextLine();
+				jobId = in.nextLine();
+
 			}
-		}
-	} 
-	try {
-		
-		if (inputType == 1) {
-			generateIdsAndSendMail(firstName, lastName, company);
-		} else if (inputType == 2) {
-			try {
-				List<String> recipientInfoList = fileOperations.readRecords();
-
-				for (String recipientInfo : recipientInfoList) {
-					  Pattern r = Pattern.compile("(.*?)\\s+(.*?)\\s+(.*)");
-					  Matcher m = r.matcher(recipientInfo);
-					  
-					  if(m.find())
-					  {
-						  generateIdsAndSendMail(m.group(1),m.group(2),m.group(3));
-					  }
-					  else
-					  {
-						  throw new Exception("Regex not matched for record :"+recipientInfo);
-					  }
-					  
-					
-					
-					
+			if (empOrHR == 3) {
+				System.out.println("Enter email id");
+				in.nextLine();
+				emailId = in.nextLine();
+			}
+			if (empOrHR == 3) {
+				SendFileEmail em;
+				try {
+					em = new SendFileEmail();
+					em.sendMail(emailId, firstName, company, empOrHR, jobId);
+					// Sent mail to input emailId, now exit
+					System.exit(0);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
-	} catch (IOException e) {
-		e.printStackTrace();
-	} finally {
-		in.close();
+		try {
+
+			if (inputType == 1) {
+				generateIdsAndSendMail(firstName, lastName, company);
+			} else if (inputType == 2) {
+				try {
+					List<String> recipientInfoList = fileOperations.readRecords();
+
+					for (String recipientInfo : recipientInfoList) {
+						Pattern r = Pattern.compile("(.*?)\\s+(.*?)\\s+(.*)");
+						Matcher m = r.matcher(recipientInfo);
+
+						if (m.find()) {
+							generateIdsAndSendMail(m.group(1), m.group(2), m.group(3));
+						} else {
+							throw new Exception("Regex not matched for record :" + recipientInfo);
+						}
+
+					}
+
+					fileOperations.writeRecords();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			in.close();
+		}
 	}
-}
+
 	public static void main(String[] args) {
 
-			GenerateId genId;
-			try {
-				genId = new GenerateId();
-				genId.sendMails();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	
+		GenerateId genId;
+		try {
+			genId = new GenerateId();
+			genId.sendMails();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 }
