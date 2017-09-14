@@ -51,7 +51,8 @@ public class FileOperations {
 		
 		records = readRecords(inputFile);
 		records.removeIf(record -> containsRecord(record));
-
+		
+		System.out.println("Number of records : "+records.size());
 		return records;
 	}
 
@@ -61,7 +62,7 @@ public class FileOperations {
 			alreadyMailedRecords = readRecords(this.outputFile);
 			for (String alreadyMailedRecord : alreadyMailedRecords) {
 				String recordWithoutSpaces = alreadyMailedRecord.replaceAll("\\s+", "");
-				recordsWithoutSpaces.add(recordWithoutSpaces);
+				recordsWithoutSpaces.add(recordWithoutSpaces.toLowerCase());
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -91,7 +92,7 @@ public class FileOperations {
 
 		String recordWithoutSpaces = appendedInfo.replaceAll("\\s+", "");
 
-		return recordsWithoutSpaces.contains(recordWithoutSpaces);
+		return recordsWithoutSpaces.contains(recordWithoutSpaces.toLowerCase());
 
 	}
 

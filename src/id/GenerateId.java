@@ -274,13 +274,13 @@ public class GenerateId {
 
 		if(inputType == 1)return 0;
 		
-		// After each recipient, sleep for 10 seconds, after 3 recipients sleep
-		// for 20 seconds
+		// After each recipient, sleep for 1 seconds, after 4 recipients sleep
+		// for 5 seconds
 
 		if (recipientCount>0 && recipientCount % 3 == 0)
-			return 20000;
+			return 10000;
 
-		return 10000;
+		return 5000;
 	}
 
 
